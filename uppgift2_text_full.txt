@@ -1,0 +1,53 @@
+%matplotlib inline
+import numpy as np
+import cv2
+from matplotlib import pyplot as plt
+from urllib.request import urlopen, Request
+
+def img_via_url():
+    # Returns a Numpy Array with RGB colors
+    URL = "https://upload.wikimedia.org/wikipedia/commons/0/02/Sea_Otter_%28Enhydra_lutris%29_%2825169790524%29_crop.jpg"
+    HEADER = {'User-Agent': 'Mozilla/5.0'}
+    
+    # Open the URL and fetch the image data
+    req = Request(URL, headers=HEADER)
+    with urlopen(req) as response:
+        image_data = np.asarray(bytearray(response.read()), dtype="uint8")
+        BGR_IMG = cv2.imdecode(image_data, cv2.IMREAD_COLOR)
+        RGB_IMG = cv2.cvtColor(BGR_IMG, cv2.COLOR_BGR2RGB)
+    return RGB_IMG
+
+def copy_and_process(image):
+    height_original, width_original = image.shape[:2]  # Get original dimensions
+    height = 256
+    width = 256
+    resized_img = cv2.resize(image, (width, height))
+    return resized_img, resized_img.shape[0], resized_img.shape[1]
+
+# Call the image loading function
+resized_img = img_via_url()
+
+# Process the image (resize it in this case)
+resized_img, height, width = copy_and_process(resized_img)
+
+def set_pixel_values():
+    prev_val = [0, 0, 0]  # Initialize prev_val
+    for row in range(width):
+        for column in range(height):
+            prev_val = resized_img[column][row]
+            if column > (256/2):
+                if row > (256/2):
+                    resized_img[column][row] = [-200, prev_val[1], prev_val[2]]
+                else: 
+                    resized_img[column][row] = [prev_val[1], prev_val[2], -100]
+                    prev_val[1] = resized_img[column, row, 1]
+                    prev_val[2] = resized_img[column, row, 2]
+
+set_pixel_values()
+plt.imshow(resized_img)
+plt.show()
+
+flattened_img = np.reshape( resized_img , (-1, 1))#as many rows as we need but only one column
+ 
+print(flattened_img.shape)
+print(flattened_img)
